@@ -19,8 +19,16 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         await client.connect();
+        const carCollection = client.db('carMax').collection('cars');
         app.get('/', (req, res) => {
             res.send('CarMax server is running agun..............');
+        })
+
+        app.get('/cars', async (req, res) => {
+            const query = {};
+            const cursor = carCollection.find(query);
+            const cars = await cursor.toArray();
+            res.send(cars);
         })
     }
     finally {
