@@ -29,7 +29,14 @@ async function run() {
             const cursor = carCollection.find(query);
             const cars = await cursor.toArray();
             res.send(cars);
-        })
+        });
+
+        app.post('/cars', async (req, res) => {
+            const car = req.body;
+            console.log(car);
+            const result = await carCollection.insertOne(car);
+            res.send(result);
+        });
     }
     finally {
 
