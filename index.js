@@ -26,8 +26,15 @@ async function run() {
 
         app.get('/cars', async (req, res) => {
             const query = {};
+            const customQuery = req.query.home;
             const cursor = carCollection.find(query);
-            const cars = await cursor.toArray();
+            let cars;
+            if (customQuery) {
+                cars = await cursor.limit(6).toArray();
+            }
+            else {
+                cars = await cursor.toArray();
+            }
             res.send(cars);
         });
 
