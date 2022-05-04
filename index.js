@@ -60,6 +60,23 @@ async function run() {
             res.send(result);
         });
 
+        //update quantity
+        app.put('/car/:id', async (req, res) => {
+            const id = req.params.id;
+            const prevQuantity = parseInt(req.query.quantity);
+            const updatedQuantity = prevQuantity - 1;
+            const filter = { _id: ObjectId(id) };
+            console.log('Updated-', updatedQuantity);
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    quantity: updatedQuantity
+                }
+            };
+            const result = await carCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
 
     }
     finally {
