@@ -64,9 +64,15 @@ async function run() {
         app.put('/car/:id', async (req, res) => {
             const id = req.params.id;
             const prevQuantity = parseInt(req.query.quantity);
-            const updatedQuantity = prevQuantity - 1;
+            const addedQuantity = parseInt(req.query.add);
+            let updatedQuantity;
+            if (addedQuantity) {
+                updatedQuantity = prevQuantity + addedQuantity;
+            }
+            else {
+                updatedQuantity = prevQuantity - 1;
+            }
             const filter = { _id: ObjectId(id) };
-            console.log('Updated-', updatedQuantity);
             const options = { upsert: true };
             const updatedDoc = {
                 $set: {
