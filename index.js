@@ -25,17 +25,31 @@ async function run() {
         })
 
         app.get('/cars', async (req, res) => {
-            const query = {};
+            const email = req.query.email;
             const customQuery = req.query.home;
-            const cursor = carCollection.find(query);
+            let query;
             let cars;
-            if (customQuery) {
-                cars = await cursor.limit(6).toArray();
+            let cursor;
+            if (email) {
+                query = {
+                    email: email
+                };
+                cursor = carCollection.find(query);
+                cars = await cursor.toArray();
+                console.log('query-', query);
+                res.send(cars);
             }
             else {
-                cars = await cursor.toArray();
+                query = {};
+                cursor = carCollection.find(query);
+                if (customQuery) {
+                    cars = await cursor.limit(6).toArray();
+                }
+                else {
+                    cars = await cursor.toArray();
+                }
+                res.send(cars);
             }
-            res.send(cars);
         });
 
         app.get('/car/:id', async (req, res) => {
