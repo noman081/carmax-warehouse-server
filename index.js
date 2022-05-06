@@ -20,6 +20,8 @@ async function run() {
     try {
         await client.connect();
         const carCollection = client.db('carMax').collection('cars');
+        const carCategories = client.db('carMax').collection('carCategories');
+        const contactCollection = client.db('carMax').collection('contact');
         app.get('/', (req, res) => {
             res.send('CarMax server is running agun..............');
         })
@@ -27,29 +29,30 @@ async function run() {
         app.get('/cars', async (req, res) => {
             const email = req.query.email;
             const customQuery = req.query.home;
+            const brand = req.query.brand;
             let query;
             let cars;
-            let cursor;
             if (email) {
                 query = {
                     email: email
                 };
-                cursor = carCollection.find(query);
-                cars = await cursor.toArray();
-                console.log('query-', query);
-                res.send(cars);
+            }
+            else if (brand) {
+                query = {
+                    brand: brand
+                };
             }
             else {
                 query = {};
-                cursor = carCollection.find(query);
-                if (customQuery) {
-                    cars = await cursor.limit(6).toArray();
-                }
-                else {
-                    cars = await cursor.toArray();
-                }
-                res.send(cars);
             }
+            const cursor = carCollection.find(query);
+            if (customQuery) {
+                cars = await cursor.limit(6).toArray();
+            }
+            else {
+                cars = await cursor.toArray();
+            }
+            res.send(cars);
         });
 
         app.get('/car/:id', async (req, res) => {
@@ -94,6 +97,24 @@ async function run() {
                 }
             };
             const result = await carCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
+        //car categories
+        app.get('/car-categories', async (req, res) => {
+            const query = {};
+            const cursor = carCategories.find(query);
+            const result = await cursor.toArray();
+
+            res.send(result);
+
+        })
+
+        //contact message
+        app.post('/contact', async (req, res) => {
+            const contact = req.body;
+            console.log(contact);
+            const result = await contactCollection.insertOne(contact);
             res.send(result);
         })
 
