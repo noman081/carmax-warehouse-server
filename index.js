@@ -86,7 +86,8 @@ async function run() {
             if (addedQuantity) {
                 updatedQuantity = prevQuantity + addedQuantity;
             }
-            else {
+            else if (prevQuantity > 0) {
+                console.log('PrevQuantity-', prevQuantity);
                 updatedQuantity = prevQuantity - 1;
             }
             const filter = { _id: ObjectId(id) };
