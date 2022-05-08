@@ -1,6 +1,7 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
@@ -10,7 +11,21 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-
+const verifyJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'Unauthorized user' });
+    }
+    const accessToken = authHeader.split(' ')[1];
+    jwt.verify(accessToken, process.env.SECRET_ACCESS_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' });
+        }
+        // console.log('decoded-', decoded);
+        req.decoded = decoded;
+        next();
+    })
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.kwo2m.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -22,22 +37,29 @@ async function run() {
         const carCollection = client.db('carMax').collection('cars');
         const carCategories = client.db('carMax').collection('carCategories');
         const contactCollection = client.db('carMax').collection('contact');
+
+        //auth 
+        app.post('/signin', async (req, res) => {
+            const email = req.body;
+            console.log(email);
+            const accessToken = jwt.sign(email, process.env.SECRET_ACCESS_TOKEN, {
+                expiresIn: '1d'
+            });
+            res.send(accessToken);
+
+        })
+
+
         app.get('/', (req, res) => {
             res.send('CarMax server is running agun..............');
         })
 
         app.get('/cars', async (req, res) => {
-            const email = req.query.email;
             const customQuery = req.query.home;
             const brand = req.query.brand;
             let query;
             let cars;
-            if (email) {
-                query = {
-                    email: email
-                };
-            }
-            else if (brand) {
+            if (brand) {
                 query = {
                     brand: brand
                 };
@@ -55,6 +77,24 @@ async function run() {
             res.send(cars);
         });
 
+
+        //my items api
+        app.get('/myitem', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const email = req.query.email;
+            console.log('My Item-', decodedEmail);
+            if (decodedEmail === email) {
+                const query = {
+                    email: email
+                };
+                const cursor = carCollection.find(query);
+                const cars = await cursor.toArray();
+                res.send(cars);
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidden access' });
+            }
+        })
         app.get('/car/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
